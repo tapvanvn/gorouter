@@ -39,4 +39,5 @@ func TestRoute(t *testing.T) {
 	}
 
 	route.Route("test1/action", nil, nil)
+	route.Route("", nil, nil)
 }
