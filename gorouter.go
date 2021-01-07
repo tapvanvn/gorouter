@@ -12,6 +12,7 @@ type RouteHandle func(*RouteContext, http.ResponseWriter, *http.Request)
 
 //RouteContext context when a route had been parsed
 type RouteContext struct {
+	Path         string `json:"path"`
 	Router       *Router
 	Parent       *RouteContext
 	Action       string            `json:"action"`
@@ -22,7 +23,8 @@ type RouteContext struct {
 //Router router
 type Router struct {
 	//Handler
-	root RouteDefine
+	root     RouteDefine
+	unhandle RouteHandle
 }
 
 //Init init router
@@ -50,6 +52,10 @@ func (router *Router) Init(define string, handles map[string]RouteHandle) {
 			define.Handle = handle
 
 		}
+	}
+	if unhandle, ok := handles["unhandle"]; ok {
+
+		router.unhandle = unhandle
 	}
 	router.PrintDebug()
 }
@@ -136,6 +142,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 	maxI := len(patterns)
 
 	root := RouteContext{
+		Path:         "/",
 		Action:       "index",
 		Indexes:      map[string]string{},
 		Parent:       nil,
@@ -157,6 +164,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 			//in case we found sub route
 			routeDefine = subRouteDefine
 			subContext := &RouteContext{
+				Path:         context.Path + "/" + pattern,
 				Action:       "index",
 				Indexes:      map[string]string{},
 				Parent:       context,
@@ -192,6 +200,10 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 	if routeDefine.Handle != nil {
 
 		routeDefine.Handle(context, w, r)
+
+	} else {
+
+		router.unhandle(context, w, r)
 	}
 }
 
