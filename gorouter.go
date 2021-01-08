@@ -120,8 +120,10 @@ func (router *Router) FormatIndex(formats []string, pattern string) map[string]s
 	for _, format := range formats {
 
 		if i >= maxI {
+
 			break
 		}
+
 		rs[format] = idicates[i]
 		i++
 	}
@@ -149,8 +151,10 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		Parent:       nil,
 		RestPatterns: []string{},
 	}
+
 	var routeDefine *RouteDefine = &router.root
 	var context *RouteContext = &root
+	var testIndex bool = false
 
 	for {
 		if i >= maxI {
@@ -172,13 +176,24 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 				RestPatterns: []string{},
 			}
 			context = subContext
+			testIndex = false
+
+		} else if !testIndex {
+
+			context.Indexes = router.FormatIndex(routeDefine.Indexes, pattern)
+
+			testIndex = true
+
+			if len(context.Indexes) == 0 {
+
+				context.Action = pattern
+			}
+		} else if context.Action == "index" {
+
+			context.Action = pattern
 
 		} else {
 
-			context.Indexes = router.FormatIndex(routeDefine.Indexes, pattern)
-			if len(context.Indexes) == 0 {
-				context.Action = pattern
-			}
 			break
 		}
 		i++
@@ -193,7 +208,9 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		if context.Action == "index" {
 
 			context.Action = patterns[i]
+
 		} else {
+
 			context.RestPatterns = append(context.RestPatterns, patterns[i])
 		}
 		i++
@@ -214,16 +231,23 @@ func printDebug(name string, define *RouteDefine, level int) {
 		fmt.Print(" |")
 	}
 	fmt.Print(name)
+
 	if len(define.Indexes) > 0 {
+
 		fmt.Print("(", strings.Join(define.Indexes, ","), ")")
 	}
 	if define.Handle != nil {
+
 		fmt.Print((" handled"))
+
 	} else {
+
 		fmt.Print((" unhandle"))
 	}
 	fmt.Println("")
+
 	if len(define.Subs) > 0 {
+
 		for subName, subDefine := range define.Subs {
 
 			printDebug(subName, subDefine, level+1)

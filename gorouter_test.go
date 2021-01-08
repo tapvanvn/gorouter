@@ -2,13 +2,15 @@ package gorouter_test
 
 import (
 	"fmt"
-	"gorouter"
 	"net/http"
 	"testing"
+
+	"github.com/tapvanvn/gorouter"
 )
 
 var routeStructure string = `{ 
 		"test1":{
+			"indexes":["param"],
 			"subs":{
 				"test_sub_1":{}
 			}
@@ -22,7 +24,14 @@ func rootHandler(context *gorouter.RouteContext, w http.ResponseWriter, r *http.
 
 func test1Handler(context *gorouter.RouteContext, w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("test1 " + context.Action)
+	if index, ok := context.Indexes["param"]; ok {
+
+		fmt.Println("test1(", index, ")", context.Action)
+
+	} else {
+
+		fmt.Println("test1 " + context.Action)
+	}
 }
 
 func TestRoute(t *testing.T) {
@@ -39,5 +48,6 @@ func TestRoute(t *testing.T) {
 	}
 
 	route.Route("test1/action", nil, nil)
+	route.Route("test1/index_1/action", nil, nil)
 	route.Route("", nil, nil)
 }
