@@ -2,7 +2,6 @@ package gorouter_test
 
 import (
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/tapvanvn/gorouter"
@@ -17,12 +16,12 @@ var routeStructure string = `{
 		}
 	}`
 
-func rootHandler(context *gorouter.RouteContext, w http.ResponseWriter, r *http.Request) {
+func rootHandler(context *gorouter.RouteContext) {
 
 	fmt.Println("root handle")
 }
 
-func test1Handler(context *gorouter.RouteContext, w http.ResponseWriter, r *http.Request) {
+func test1Handler(context *gorouter.RouteContext) {
 
 	if index, ok := context.Indexes["param"]; ok {
 
