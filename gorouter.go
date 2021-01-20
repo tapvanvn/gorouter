@@ -8,7 +8,7 @@ import (
 )
 
 //RouteHandle handle a route
-type RouteHandle func(*RouteContext, http.ResponseWriter, *http.Request) bool
+type RouteHandle func(*RouteContext, http.ResponseWriter, *http.Request)
 
 //RouteContext context when a route had been parsed
 type RouteContext struct {
@@ -18,6 +18,7 @@ type RouteContext struct {
 	Action       string            `json:"action"`
 	Indexes      map[string]string `json:"indexes"`
 	RestPatterns []string          `json:"rest_patterns"`
+	Handled      bool
 }
 
 //Router router
@@ -27,10 +28,11 @@ type Router struct {
 	unhandle RouteHandle
 }
 
-func defaultUnHandler(ctx *RouteContext, w http.ResponseWriter, r *http.Request) bool {
+func defaultUnHandler(ctx *RouteContext, w http.ResponseWriter, r *http.Request) {
 
-	w.WriteHeader(http.StatusNotFound)
-	return true
+	if w != nil {
+		w.WriteHeader(http.StatusNotFound)
+	}
 }
 
 //Init init router
@@ -157,6 +159,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		Indexes:      map[string]string{},
 		Parent:       nil,
 		RestPatterns: []string{},
+		Handled:      false,
 	}
 
 	var routeDefine *RouteDefine = &router.root
@@ -222,17 +225,17 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		}
 		i++
 	}
-	var handled = false
 
 	for _, handler := range routeDefine.Handles {
 
-		if handler(context, w, r) {
-			handled = true
+		handler(context, w, r)
+		if context.Handled {
+
 			break
 		}
 	}
 
-	if !handled {
+	if !context.Handled {
 
 		router.unhandle(context, w, r)
 	}
