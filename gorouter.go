@@ -8,7 +8,7 @@ import (
 )
 
 //RouteHandle handle a route
-type RouteHandle func(*RouteContext, http.ResponseWriter, *http.Request)
+type RouteHandle func(*RouteContext, http.ResponseWriter, *http.Request) bool
 
 //RouteContext context when a route had been parsed
 type RouteContext struct {
@@ -27,10 +27,17 @@ type Router struct {
 	unhandle RouteHandle
 }
 
+func defaultUnHandler(ctx *RouteContext, w http.ResponseWriter, r *http.Request) bool {
+
+	w.WriteHeader(http.StatusNotFound)
+	return true
+}
+
 //Init init router
-func (router *Router) Init(define string, handles map[string]RouteHandle) {
+func (router *Router) Init(define string, handles map[string][]RouteHandle) {
 
 	router.root = RouteDefine{}
+	router.unhandle = defaultUnHandler
 
 	defineSub := map[string]*RouteDefine{}
 
@@ -43,19 +50,19 @@ func (router *Router) Init(define string, handles map[string]RouteHandle) {
 
 	router.root.Subs = defineSub
 
-	for path, handle := range handles {
+	for path, handleStack := range handles {
 
-		define := router.FindRoute(path)
+		routeDefine := router.FindRoute(path)
 
-		if define != nil {
+		if routeDefine != nil {
 
-			define.Handle = handle
+			routeDefine.Handles = handleStack
 
 		}
 	}
-	if unhandle, ok := handles["unhandle"]; ok {
+	if unhandle, ok := handles["unhandle"]; ok && len(unhandle) > 0 {
 
-		router.unhandle = unhandle
+		router.unhandle = unhandle[0]
 	}
 	router.PrintDebug()
 }
@@ -215,11 +222,17 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		}
 		i++
 	}
-	if routeDefine.Handle != nil {
+	var handled = false
 
-		routeDefine.Handle(context, w, r)
+	for _, handler := range routeDefine.Handles {
 
-	} else {
+		if handler(context, w, r) {
+			handled = true
+			break
+		}
+	}
+
+	if !handled {
 
 		router.unhandle(context, w, r)
 	}
@@ -236,7 +249,7 @@ func printDebug(name string, define *RouteDefine, level int) {
 
 		fmt.Print("(", strings.Join(define.Indexes, ","), ")")
 	}
-	if define.Handle != nil {
+	if len(define.Handles) > 0 {
 
 		fmt.Print((" handled"))
 

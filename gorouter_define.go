@@ -4,7 +4,7 @@ package gorouter
 type RouteDefine struct {
 	Indexes []string                `json:"indexes,omitempty"`
 	Subs    map[string]*RouteDefine `json:"subs,omitempty"`
-	Handle  RouteHandle
+	Handles []RouteHandle
 }
 
 //SubRoute is subroute existed

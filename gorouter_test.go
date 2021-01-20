@@ -17,12 +17,13 @@ var routeStructure string = `{
 		}
 	}`
 
-func rootHandler(context *gorouter.RouteContext, w http.ResponseWriter, r *http.Request) {
+func rootHandler(context *gorouter.RouteContext, w http.ResponseWriter, r *http.Request) bool {
 
 	fmt.Println("root handle")
+	return true
 }
 
-func test1Handler(context *gorouter.RouteContext, w http.ResponseWriter, r *http.Request) {
+func test1Handler(context *gorouter.RouteContext, w http.ResponseWriter, r *http.Request) bool {
 
 	if index, ok := context.Indexes["param"]; ok {
 
@@ -32,14 +33,15 @@ func test1Handler(context *gorouter.RouteContext, w http.ResponseWriter, r *http
 
 		fmt.Println("test1 " + context.Action)
 	}
+	return true
 }
 
 func TestRoute(t *testing.T) {
 
 	route := gorouter.Router{}
-	route.Init(routeStructure, map[string]gorouter.RouteHandle{
-		"":      rootHandler,
-		"test1": test1Handler,
+	route.Init(routeStructure, map[string][]gorouter.RouteHandle{
+		"":      {rootHandler},
+		"test1": {test1Handler},
 	})
 
 	if route.FindRoute("test1") == nil {
