@@ -155,7 +155,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 	i := 0
 	maxI := len(patterns)
 
-	root := RouteContext{
+	var context *RouteContext = &RouteContext{
 		Path:         "/",
 		Action:       "index",
 		Indexes:      map[string]string{},
@@ -167,7 +167,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 	}
 
 	var routeDefine *RouteDefine = &router.root
-	var context *RouteContext = &root
+
 	var testIndex bool = false
 
 	for {
@@ -188,6 +188,8 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 				Indexes:      map[string]string{},
 				Parent:       context,
 				RestPatterns: []string{},
+				W:            w,
+				R:            r,
 			}
 			context = subContext
 			testIndex = false
