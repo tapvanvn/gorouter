@@ -26,8 +26,10 @@ type RouteContext struct {
 //Router router
 type Router struct {
 	//Handler
-	root     RouteDefine
-	unhandle RouteHandle
+	root      RouteDefine
+	unhandle  RouteHandle
+	prefix    string
+	prefixLen int
 }
 
 func defaultUnHandler(ctx *RouteContext) {
@@ -38,10 +40,12 @@ func defaultUnHandler(ctx *RouteContext) {
 }
 
 //Init init router
-func (router *Router) Init(define string, handles map[string][]RouteHandle) {
+func (router *Router) Init(prefix string, define string, handles map[string][]RouteHandle) {
 
 	router.root = RouteDefine{}
 	router.unhandle = defaultUnHandler
+	router.prefix = prefix
+	router.prefixLen = len(prefix)
 
 	defineSub := map[string]*RouteDefine{}
 
@@ -145,16 +149,6 @@ func (router *Router) FormatIndex(formats []string, pattern string) map[string]s
 //Route route
 func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request) {
 
-	patterns := []string{}
-
-	if len(path) > 0 {
-
-		patterns = strings.Split(path, "/")
-	}
-
-	i := 0
-	maxI := len(patterns)
-
 	var context *RouteContext = &RouteContext{
 		Path:         "/",
 		Action:       "index",
@@ -165,6 +159,24 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		W:            w,
 		R:            r,
 	}
+
+	if router.prefixLen > 0 && !strings.HasPrefix(path, router.prefix) {
+
+		router.unhandle(context)
+		return
+	}
+
+	routePath := path[router.prefixLen:]
+
+	patterns := []string{}
+
+	if len(routePath) > 0 {
+
+		patterns = strings.Split(routePath, "/")
+	}
+
+	i := 0
+	maxI := len(patterns)
 
 	var routeDefine *RouteDefine = &router.root
 

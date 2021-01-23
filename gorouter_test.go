@@ -36,7 +36,7 @@ func test1Handler(context *gorouter.RouteContext) {
 func TestRoute(t *testing.T) {
 
 	route := gorouter.Router{}
-	route.Init(routeStructure, map[string][]gorouter.RouteHandle{
+	route.Init("/api", routeStructure, map[string][]gorouter.RouteHandle{
 		"":      {rootHandler},
 		"test1": {test1Handler},
 	})
@@ -46,7 +46,7 @@ func TestRoute(t *testing.T) {
 		t.Fail()
 	}
 
-	route.Route("test1/action", nil, nil)
-	route.Route("test1/index_1/action", nil, nil)
+	route.Route("/api/test1/action", nil, nil)
+	route.Route("/api/test1/index_1/action", nil, nil)
 	route.Route("", nil, nil)
 }
