@@ -19,6 +19,7 @@ type RouteContext struct {
 	Indexes      map[string]string `json:"indexes"`
 	RestPatterns []string          `json:"rest_patterns"`
 	Handled      bool
+	Dictionary   map[string]interface{}
 	W            http.ResponseWriter
 	R            *http.Request
 }
@@ -156,6 +157,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		Parent:       nil,
 		RestPatterns: []string{},
 		Handled:      false,
+		Dictionary:   map[string]interface{}{},
 		W:            w,
 		R:            r,
 	}
@@ -200,6 +202,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 				Indexes:      map[string]string{},
 				Parent:       context,
 				RestPatterns: []string{},
+				Dictionary:   map[string]interface{}{},
 				W:            w,
 				R:            r,
 			}
