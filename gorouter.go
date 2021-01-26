@@ -23,6 +23,20 @@ type RouteContext struct {
 	R            *http.Request
 }
 
+//AnyIndex find if any index with name in current stack of context
+func (context *RouteContext) AnyIndex(name string) (string, bool) {
+
+	if index, ok := context.Indexes[name]; ok {
+
+		return index, true
+
+	} else if context.Parent != nil {
+
+		return context.Parent.AnyIndex(name)
+	}
+	return "", false
+}
+
 //Router router
 type Router struct {
 	//Handler
