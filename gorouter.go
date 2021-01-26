@@ -19,6 +19,7 @@ type RouteContext struct {
 	Indexes      map[string]string `json:"indexes"`
 	RestPatterns []string          `json:"rest_patterns"`
 	Handled      bool
+	Dictionary   map[string]interface{}
 	W            http.ResponseWriter
 	R            *http.Request
 }
@@ -40,8 +41,10 @@ func (context *RouteContext) AnyIndex(name string) (string, bool) {
 //Router router
 type Router struct {
 	//Handler
-	root     RouteDefine
-	unhandle RouteHandle
+	root      RouteDefine
+	unhandle  RouteHandle
+	prefix    string
+	prefixLen int
 }
 
 func defaultUnHandler(ctx *RouteContext) {
@@ -52,10 +55,12 @@ func defaultUnHandler(ctx *RouteContext) {
 }
 
 //Init init router
-func (router *Router) Init(define string, handles map[string][]RouteHandle) {
+func (router *Router) Init(prefix string, define string, handles map[string][]RouteHandle) {
 
 	router.root = RouteDefine{}
 	router.unhandle = defaultUnHandler
+	router.prefix = prefix
+	router.prefixLen = len(prefix)
 
 	defineSub := map[string]*RouteDefine{}
 
@@ -159,16 +164,6 @@ func (router *Router) FormatIndex(formats []string, pattern string) map[string]s
 //Route route
 func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request) {
 
-	patterns := []string{}
-
-	if len(path) > 0 {
-
-		patterns = strings.Split(path, "/")
-	}
-
-	i := 0
-	maxI := len(patterns)
-
 	var context *RouteContext = &RouteContext{
 		Path:         "/",
 		Action:       "index",
@@ -176,9 +171,28 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		Parent:       nil,
 		RestPatterns: []string{},
 		Handled:      false,
+		Dictionary:   map[string]interface{}{},
 		W:            w,
 		R:            r,
 	}
+
+	if router.prefixLen > 0 && !strings.HasPrefix(path, router.prefix) {
+
+		router.unhandle(context)
+		return
+	}
+
+	routePath := path[router.prefixLen:]
+
+	patterns := []string{}
+
+	if len(routePath) > 0 {
+
+		patterns = strings.Split(routePath, "/")
+	}
+
+	i := 0
+	maxI := len(patterns)
 
 	var routeDefine *RouteDefine = &router.root
 
@@ -202,6 +216,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 				Indexes:      map[string]string{},
 				Parent:       context,
 				RestPatterns: []string{},
+				Dictionary:   map[string]interface{}{},
 				W:            w,
 				R:            r,
 			}
