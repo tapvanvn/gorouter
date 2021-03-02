@@ -25,6 +25,30 @@ type RouteContext struct {
 	R            *http.Request
 }
 
+//Trail pass context to handle in trail of handler
+func (context *RouteContext) Trail(trails []RouteHandle) {
+	for _, handler := range trails {
+		if context.Handled {
+			return
+		}
+		handler(context)
+	}
+}
+
+//AnyIndex find if any index with name in current stack of context
+func (context *RouteContext) AnyIndex(name string) (string, bool) {
+
+	if index, ok := context.Indexes[name]; ok {
+
+		return index, true
+
+	} else if context.Parent != nil {
+
+		return context.Parent.AnyIndex(name)
+	}
+	return "", false
+}
+
 //Router router
 type Router struct {
 	//Handler
