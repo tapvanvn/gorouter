@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -139,8 +140,10 @@ func (router *Router) FormatIndex(formats []string, pattern string) map[string]s
 
 			break
 		}
-
-		rs[format] = idicates[i]
+		decodedValue, err := url.QueryUnescape(idicates[i])
+		if err == nil {
+			rs[format] = decodedValue
+		}
 		i++
 	}
 
