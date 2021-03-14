@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 //RouteHandle handle a route
@@ -52,10 +53,13 @@ func (context *RouteContext) AnyIndex(name string) (string, bool) {
 //Router router
 type Router struct {
 	//Handler
-	root      RouteDefine
-	unhandle  RouteHandle
-	prefix    string
-	prefixLen int
+	root           RouteDefine
+	unhandle       RouteHandle
+	maintainHandle RouteHandle
+	prefix         string
+	prefixLen      int
+	measurement    bool
+	maintainTo     int64
 }
 
 func defaultUnHandler(ctx *RouteContext) {
@@ -65,11 +69,31 @@ func defaultUnHandler(ctx *RouteContext) {
 	}
 }
 
+func defaultMaintainHandler(ctx *RouteContext) {
+
+	if ctx.W != nil {
+
+		ctx.W.WriteHeader(http.StatusServiceUnavailable)
+		ctx.W.Write([]byte("server maintaining"))
+	}
+}
+
+//SetMeasurement set measurement flag
+func (router *Router) SetMeasurement(active bool) {
+	router.measurement = active
+}
+
+//SetMaintainTime set maintaining time to time point
+func (router *Router) SetMaintainTime(timestamp int64) {
+	router.maintainTo = timestamp
+}
+
 //Init init router
 func (router *Router) Init(prefix string, define string, handles map[string][]RouteHandle) {
 
 	router.root = RouteDefine{}
 	router.unhandle = defaultUnHandler
+	router.maintainHandle = defaultMaintainHandler
 	router.prefix = prefix
 	router.prefixLen = len(prefix)
 
@@ -97,6 +121,10 @@ func (router *Router) Init(prefix string, define string, handles map[string][]Ro
 	if unhandle, ok := handles["unhandle"]; ok && len(unhandle) > 0 {
 
 		router.unhandle = unhandle[0]
+	}
+	if maintainHandles, ok := handles["maintain"]; ok && len(maintainHandles) > 0 {
+
+		router.maintainHandle = maintainHandles[0]
 	}
 	router.PrintDebug()
 }
@@ -177,6 +205,9 @@ func (router *Router) FormatIndex(formats []string, pattern string) map[string]s
 //Route route
 func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request) {
 
+	now := time.Now()
+	begin_nano := now.Nanosecond()
+
 	var context *RouteContext = &RouteContext{
 		Path:         "/",
 		Action:       "index",
@@ -187,6 +218,12 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		Dictionary:   map[string]interface{}{},
 		W:            w,
 		R:            r,
+	}
+
+	if router.maintainTo < now.Unix() {
+
+		router.maintainHandle(context)
+		return
 	}
 
 	if router.prefixLen > 0 && !strings.HasPrefix(path, router.prefix) {
@@ -286,6 +323,13 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 	if !context.Handled {
 
 		router.unhandle(context)
+	}
+
+	if router.measurement {
+
+		processTime := time.Now().Nanosecond() - begin_nano
+
+		fmt.Println(r.URL.Path, processTime)
 	}
 }
 
