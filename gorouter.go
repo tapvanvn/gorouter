@@ -220,7 +220,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		R:            r,
 	}
 
-	if router.maintainTo < now.Unix() {
+	if router.maintainTo > now.Unix() {
 
 		router.maintainHandle(context)
 		return
