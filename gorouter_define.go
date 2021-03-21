@@ -2,9 +2,9 @@ package gorouter
 
 //RouteDefine define a route
 type RouteDefine struct {
-	Indexes []string                `json:"indexes,omitempty"`
-	Subs    map[string]*RouteDefine `json:"subs,omitempty"`
-	Handles []RouteHandle
+	Indexes  []string                `json:"indexes,omitempty"`
+	Subs     map[string]*RouteDefine `json:"subs,omitempty"`
+	Endpoint EndpointDefine
 }
 
 //SubRoute is subroute existed

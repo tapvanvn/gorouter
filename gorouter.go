@@ -12,6 +12,12 @@ import (
 //RouteHandle handle a route
 type RouteHandle func(*RouteContext)
 
+//EndpointDefine ...
+type EndpointDefine struct {
+	Measurement bool
+	Handles     []RouteHandle
+}
+
 //RouteContext context when a route had been parsed
 type RouteContext struct {
 	Path         string `json:"path"`
@@ -89,7 +95,7 @@ func (router *Router) SetMaintainTime(timestamp int64) {
 }
 
 //Init init router
-func (router *Router) Init(prefix string, define string, handles map[string][]RouteHandle) {
+func (router *Router) Init(prefix string, define string, endpoints map[string]EndpointDefine) {
 
 	router.root = RouteDefine{}
 	router.unhandle = defaultUnHandler
@@ -108,23 +114,23 @@ func (router *Router) Init(prefix string, define string, handles map[string][]Ro
 
 	router.root.Subs = defineSub
 
-	for path, handleStack := range handles {
+	for path, endpoint := range endpoints {
 
 		routeDefine := router.FindRoute(path)
 
 		if routeDefine != nil {
 
-			routeDefine.Handles = handleStack
+			routeDefine.Endpoint = endpoint
 
 		}
 	}
-	if unhandle, ok := handles["unhandle"]; ok && len(unhandle) > 0 {
+	if unhandleEndpoint, ok := endpoints["unhandle"]; ok && len(unhandleEndpoint.Handles) > 0 {
 
-		router.unhandle = unhandle[0]
+		router.unhandle = unhandleEndpoint.Handles[0]
 	}
-	if maintainHandles, ok := handles["maintain"]; ok && len(maintainHandles) > 0 {
+	if maintainEndpoint, ok := endpoints["maintain"]; ok && len(maintainEndpoint.Handles) > 0 {
 
-		router.maintainHandle = maintainHandles[0]
+		router.maintainHandle = maintainEndpoint.Handles[0]
 	}
 	router.PrintDebug()
 }
@@ -311,7 +317,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		i++
 	}
 
-	for _, handler := range routeDefine.Handles {
+	for _, handler := range routeDefine.Endpoint.Handles {
 
 		handler(context)
 		if context.Handled {
@@ -325,11 +331,11 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		router.unhandle(context)
 	}
 
-	if router.measurement {
+	if routeDefine.Endpoint.Measurement {
 
 		processTime := time.Now().Nanosecond() - begin_nano
 
-		fmt.Println(r.URL.Path, processTime)
+		fmt.Println(r.URL.Path, float32(processTime/1000000))
 	}
 }
 
@@ -344,7 +350,7 @@ func printDebug(name string, define *RouteDefine, level int) {
 
 		fmt.Print("(", strings.Join(define.Indexes, ","), ")")
 	}
-	if len(define.Handles) > 0 {
+	if len(define.Endpoint.Handles) > 0 {
 
 		fmt.Print((" handled"))
 
