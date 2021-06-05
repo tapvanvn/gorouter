@@ -183,7 +183,7 @@ func (router *Router) FormatIndex(formats []string, pattern string) map[string]s
 		return rs
 	}
 
-	idicates := strings.Split(pattern, ".")
+	idicates := strings.Split(pattern, ";")
 
 	maxI := len(idicates)
 
