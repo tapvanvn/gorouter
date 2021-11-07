@@ -212,37 +212,6 @@ func (router *Router) FormatIndex(formats []string, pattern string) map[string]s
 	return rs
 }
 
-func (router *Router) handle(handlers []RouteHandle, context *RouteContext, begin time.Time, measurement bool) {
-	for _, handler := range handlers {
-
-		handler(context)
-		if context.Handled {
-
-			break
-		}
-	}
-
-	if !context.Handled {
-
-		router.unhandle(context)
-	}
-
-	if measurement {
-
-		processTime := time.Now().Sub(begin).Nanoseconds()
-
-		router.called_mux.Lock()
-		router.called++
-
-		if router.called == math.MaxUint64 {
-			router.called = 0
-		}
-		router.called_mux.Unlock()
-
-		fmt.Printf("mersure: %s %0.2fns serviced:%d\n", context.R.URL.Path, float32(processTime/1000000), router.called)
-	}
-}
-
 //Route route
 func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request) {
 
@@ -351,9 +320,9 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		i++
 	}
 
-	go router.handle(routeDefine.Endpoint.Handles, context, now, routeDefine.Endpoint.Measurement)
+	router.handle(routeDefine.Endpoint.Handles, context, now, routeDefine.Endpoint.Measurement)
 
-	/*for _, handler := range routeDefine.Endpoint.Handles {
+	for _, handler := range routeDefine.Endpoint.Handles {
 
 		handler(context)
 		if context.Handled {
@@ -380,7 +349,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		router.called_mux.Unlock()
 
 		fmt.Printf("mersure: %s %0.2fns serviced:%d\n", r.URL.Path, float32(processTime/1000000), router.called)
-	}*/
+	}
 }
 
 func printDebug(name string, define *RouteDefine, level int) {
