@@ -11,6 +11,9 @@ import (
 	"time"
 )
 
+var __serviced uint64 = 0
+var __serviced_mutex sync.Mutex
+
 //RouteHandle handle a route
 type RouteHandle func(*RouteContext)
 
@@ -68,8 +71,6 @@ type Router struct {
 	prefixLen      int
 	measurement    bool
 	maintainTo     int64
-	called         uint64
-	called_mux     sync.Mutex
 }
 
 func defaultUnHandler(ctx *RouteContext) {
@@ -170,7 +171,7 @@ func (router *Router) FindRoute(path string) *RouteDefine {
 }
 
 //ServeHTTP handle
-func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	router.Route(r.URL.Path[1:], w, r)
 
@@ -338,15 +339,15 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 
 		processTime := time.Now().Sub(now).Nanoseconds()
 
-		router.called_mux.Lock()
-		router.called++
+		__serviced_mutex.Lock()
+		__serviced++
 
-		if router.called == math.MaxUint64 {
-			router.called = 0
+		if __serviced == math.MaxUint64 {
+			__serviced = 0
 		}
-		router.called_mux.Unlock()
+		__serviced_mutex.Unlock()
 
-		fmt.Printf("mersure: %s %0.2fns serviced:%d\n", r.URL.Path, float32(processTime/1000000), router.called)
+		fmt.Printf("mersure: %s %0.2fns serviced:%d\n", r.URL.Path, float32(processTime/1000000), __serviced)
 	}
 }
 
