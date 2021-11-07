@@ -170,7 +170,7 @@ func (router *Router) FindRoute(path string) *RouteDefine {
 }
 
 //ServeHTTP handle
-func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	router.Route(r.URL.Path[1:], w, r)
 
