@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -68,6 +69,7 @@ type Router struct {
 	measurement    bool
 	maintainTo     int64
 	called         uint64
+	called_mux     sync.Mutex
 }
 
 func defaultUnHandler(ctx *RouteContext) {
@@ -215,12 +217,6 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 
 	now := time.Now()
 
-	router.called++
-
-	if router.called == math.MaxUint64 {
-		router.called = 0
-	}
-
 	var context *RouteContext = &RouteContext{
 		Path:         "/",
 		Action:       "index",
@@ -342,7 +338,15 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 
 		processTime := time.Now().Sub(now).Nanoseconds()
 
-		fmt.Printf("mersure: %s %0.2fns serviced:%d", r.URL.Path, float32(processTime/1000000), router.called)
+		router.called_mux.Lock()
+		router.called++
+
+		if router.called == math.MaxUint64 {
+			router.called = 0
+		}
+		router.called_mux.Unlock()
+
+		fmt.Printf("mersure: %s %0.2fns serviced:%d\n", r.URL.Path, float32(processTime/1000000), router.called)
 	}
 }
 
