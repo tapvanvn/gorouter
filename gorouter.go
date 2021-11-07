@@ -320,8 +320,6 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		i++
 	}
 
-	router.handle(routeDefine.Endpoint.Handles, context, now, routeDefine.Endpoint.Measurement)
-
 	for _, handler := range routeDefine.Endpoint.Handles {
 
 		handler(context)
