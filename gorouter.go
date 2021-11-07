@@ -3,6 +3,7 @@ package gorouter
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"strings"
@@ -66,6 +67,7 @@ type Router struct {
 	prefixLen      int
 	measurement    bool
 	maintainTo     int64
+	called         uint64
 }
 
 func defaultUnHandler(ctx *RouteContext) {
@@ -168,7 +170,7 @@ func (router *Router) FindRoute(path string) *RouteDefine {
 //ServeHTTP handle
 func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	router.Route(r.URL.Path[1:], w, r)
+	go router.Route(r.URL.Path[1:], w, r)
 
 }
 
@@ -212,7 +214,12 @@ func (router *Router) FormatIndex(formats []string, pattern string) map[string]s
 func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
-	begin_nano := now.Nanosecond()
+
+	router.called++
+
+	if router.called == math.MaxUint64 {
+		router.called = 0
+	}
 
 	var context *RouteContext = &RouteContext{
 		Path:         "/",
@@ -333,9 +340,9 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 
 	if routeDefine.Endpoint.Measurement {
 
-		processTime := time.Now().Nanosecond() - begin_nano
+		processTime := time.Now().Sub(now).Nanoseconds()
 
-		fmt.Println(r.URL.Path, float32(processTime/1000000))
+		fmt.Printf("mersure: %s %0.2fns serviced:%d", r.URL.Path, float32(processTime/1000000), router.called)
 	}
 }
 

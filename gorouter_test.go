@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/tapvanvn/gorouter"
+	"github.com/tapvanvn/gorouter/v2"
 )
 
 var routeStructure string = `{ 
