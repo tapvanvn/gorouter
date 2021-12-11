@@ -140,6 +140,46 @@ func (router *Router) Init(prefix string, define string, endpoints map[string]En
 	router.PrintDebug()
 }
 
+func (router *Router) InitWithIndexes(prefix string, indexes []string, define string, endpoints map[string]EndpointDefine) {
+
+	router.root = RouteDefine{}
+	router.unhandle = defaultUnHandler
+	router.maintainHandle = defaultMaintainHandler
+	router.prefix = prefix
+	router.prefixLen = len(prefix)
+	router.root.Indexes = indexes
+
+	defineSub := map[string]*RouteDefine{}
+
+	err := json.Unmarshal([]byte(define), &defineSub)
+
+	if err != nil {
+		fmt.Println("cannot partse define")
+		panic(err)
+	}
+
+	router.root.Subs = defineSub
+
+	for path, endpoint := range endpoints {
+
+		routeDefine := router.FindRoute(path)
+
+		if routeDefine != nil {
+
+			routeDefine.Endpoint = endpoint
+		}
+	}
+	if unhandleEndpoint, ok := endpoints["unhandle"]; ok && len(unhandleEndpoint.Handles) > 0 {
+
+		router.unhandle = unhandleEndpoint.Handles[0]
+	}
+	if maintainEndpoint, ok := endpoints["maintain"]; ok && len(maintainEndpoint.Handles) > 0 {
+
+		router.maintainHandle = maintainEndpoint.Handles[0]
+	}
+	router.PrintDebug()
+}
+
 //FindRoute find define of a route
 func (router *Router) FindRoute(path string) *RouteDefine {
 
@@ -347,7 +387,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		}
 		__serviced_mutex.Unlock()
 
-		fmt.Printf("mersure: %s %0.2fns serviced:%d\n", r.URL.Path, float32(processTime/1000000), __serviced)
+		fmt.Printf("mersure: %s %0.2fms serviced:%d\n", r.URL.Path, float32(processTime/1_000_000), __serviced)
 	}
 }
 
