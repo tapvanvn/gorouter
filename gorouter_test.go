@@ -50,3 +50,14 @@ func TestRoute(t *testing.T) {
 	route.Route("/api/test1/index_1/action", nil, nil)
 	route.Route("", nil, nil)
 }
+
+func TestStructureShouldError(t *testing.T) {
+
+	builder := gorouter.NewStructureBuilder()
+	builder.AddOneLine("root/sub/:id_1,id_2")
+
+	if err := builder.AddOneLine("root/sub/:id_2,id_3/sub2"); err == nil {
+
+		t.Fail()
+	}
+}

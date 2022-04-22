@@ -375,7 +375,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		router.unhandle(context)
 	}
 
-	if routeDefine.Endpoint.Measurement {
+	if routeDefine.Endpoint.Measurement && r != nil {
 
 		processTime := time.Now().Sub(now).Nanoseconds()
 
