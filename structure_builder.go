@@ -26,6 +26,7 @@ type StructureBuilder struct {
 func (builder *StructureBuilder) AddOneLine(defineString string) error {
 
 	parts := strings.Split(defineString, "/")
+	fmt.Println(parts)
 	var last *RouteDefine = nil
 	errInvalid := errors.New("invalid define")
 	for _, part := range parts {
@@ -79,9 +80,11 @@ func (builder *StructureBuilder) AddOneLine(defineString string) error {
 			continue
 
 		} else if last.SubRoute(formattedPart) == nil {
-			last := NewEmptyRouteDefine()
 
-			last.Subs[formattedPart] = last
+			newSubRoute := NewEmptyRouteDefine()
+
+			last.Subs[formattedPart] = newSubRoute
+			last = newSubRoute
 
 			continue
 		}

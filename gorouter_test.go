@@ -61,3 +61,12 @@ func TestStructureShouldError(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestStructure(t *testing.T) {
+
+	builder := gorouter.NewStructureBuilder()
+	builder.AddOneLine("root/sub/:id_1,id_2")
+	builder.AddOneLine("root/sub/sub2")
+
+	fmt.Println(builder.Export())
+}

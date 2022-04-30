@@ -17,50 +17,6 @@ var __serviced_mutex sync.Mutex
 //RouteHandle handle a route
 type RouteHandle func(*RouteContext)
 
-//EndpointDefine ...
-type EndpointDefine struct {
-	Measurement bool
-	Handles     []RouteHandle
-}
-
-//RouteContext context when a route had been parsed
-type RouteContext struct {
-	Path         string `json:"path"`
-	Router       *Router
-	Parent       *RouteContext
-	Action       string            `json:"action"`
-	Indexes      map[string]string `json:"indexes"`
-	RestPatterns []string          `json:"rest_patterns"`
-	Handled      bool
-	Dictionary   map[string]interface{}
-	W            http.ResponseWriter
-	R            *http.Request
-}
-
-//Trail pass context to handle in trail of handler
-func (context *RouteContext) Trail(trails []RouteHandle) {
-	for _, handler := range trails {
-		if context.Handled {
-			return
-		}
-		handler(context)
-	}
-}
-
-//AnyIndex find if any index with name in current stack of context
-func (context *RouteContext) AnyIndex(name string) (string, bool) {
-
-	if index, ok := context.Indexes[name]; ok {
-
-		return index, true
-
-	} else if context.Parent != nil {
-
-		return context.Parent.AnyIndex(name)
-	}
-	return "", false
-}
-
 //Router router
 type Router struct {
 	//Handler
@@ -140,6 +96,7 @@ func (router *Router) Init(prefix string, define string, endpoints map[string]En
 	router.PrintDebug()
 }
 
+//Init router in with root handler also has indexes
 func (router *Router) InitWithIndexes(prefix string, indexes []string, define string, endpoints map[string]EndpointDefine) {
 
 	router.root = RouteDefine{}
@@ -214,7 +171,6 @@ func (router *Router) FindRoute(path string) *RouteDefine {
 func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	router.Route(r.URL.Path[1:], w, r)
-
 }
 
 //FormatIndex get indexes
