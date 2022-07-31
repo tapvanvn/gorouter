@@ -69,7 +69,7 @@ func (router *Router) Init(prefix string, define string, endpoints map[string]En
 	err := json.Unmarshal([]byte(define), &defineSub)
 
 	if err != nil {
-		fmt.Println("cannot partse define")
+		fmt.Println("cannot parse define")
 		panic(err)
 	}
 
@@ -331,7 +331,7 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 		router.unhandle(context)
 	}
 
-	if routeDefine.Endpoint.Measurement && r != nil {
+	if (router.measurement || routeDefine.Endpoint.Measurement) && r != nil {
 
 		processTime := time.Now().Sub(now).Nanoseconds()
 
