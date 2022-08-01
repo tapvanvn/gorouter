@@ -3,7 +3,6 @@ package gorouter
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"net/url"
 	"strings"
@@ -335,15 +334,16 @@ func (router *Router) Route(path string, w http.ResponseWriter, r *http.Request)
 
 		processTime := time.Now().Sub(now).Nanoseconds()
 
-		__serviced_mutex.Lock()
-		__serviced++
+		//__serviced_mutex.Lock()
+		//__serviced++
 
-		if __serviced == math.MaxUint64 {
-			__serviced = 0
-		}
-		__serviced_mutex.Unlock()
+		//if __serviced == math.MaxUint64 {
+		//	__serviced = 0
+		//}
+		//__serviced_mutex.Unlock()
 
-		fmt.Printf("mersure: %s %0.2fms serviced:%d\n", r.URL.Path, float32(processTime/1_000_000), __serviced)
+		//fmt.Printf("mersure: %s %0.2fms serviced:%d\n", r.URL.Path, float32(processTime/1_000_000), __serviced)
+		fmt.Printf("mersure: %s %0.2fms \n", r.URL.Path, float32(processTime/1_000_000))
 	}
 }
 
