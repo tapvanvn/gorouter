@@ -2,6 +2,7 @@ package gorouter
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -381,4 +382,47 @@ func printDebug(name string, define *RouteDefine, level int) {
 func (router *Router) PrintDebug() {
 
 	printDebug("root", &router.root, 0)
+}
+
+//
+func (router *Router) Request(domain string, endpointPath string, indexes map[string]interface{}) (*ApiResponse, error) {
+
+	patterns := []string{}
+
+	if len(endpointPath) > 0 {
+
+		patterns = strings.Split(endpointPath, "/")
+	}
+
+	i := 0
+	maxI := len(patterns)
+
+	var routeDefine *RouteDefine = &router.root
+	var segments = []string{}
+
+	for {
+		if i >= maxI {
+			break
+		}
+		pattern := patterns[i]
+
+		subRouteDefine := routeDefine.SubRoute(pattern)
+
+		if subRouteDefine == nil {
+
+			//in case we found sub route
+			return nil, errors.New("route not found")
+		}
+		routeDefine = subRouteDefine
+		segments = append(segments, pattern)
+		routeSegment, _ := routeDefine.BuildRequestSegment(indexes)
+		if routeSegment != "" {
+			segments = append(segments, routeSegment)
+		}
+		i++
+	}
+	if routeDefine.Endpoint.ApiFormer == nil {
+		return nil, errors.New("route not found")
+	}
+	return routeDefine.Endpoint.ApiFormer.Request(domain, strings.Join(segments, "/"), indexes)
 }

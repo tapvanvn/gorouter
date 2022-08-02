@@ -37,8 +37,8 @@ func TestRoute(t *testing.T) {
 
 	route := gorouter.Router{}
 	route.Init("/api", routeStructure, map[string]gorouter.EndpointDefine{
-		"":      {true, []gorouter.RouteHandle{rootHandler}},
-		"test1": {true, []gorouter.RouteHandle{test1Handler}},
+		"":      {true, []gorouter.RouteHandle{rootHandler}, nil},
+		"test1": {true, []gorouter.RouteHandle{test1Handler}, nil},
 	})
 
 	if route.FindRoute("test1") == nil {

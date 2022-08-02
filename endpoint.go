@@ -3,9 +3,11 @@ package gorouter
 import "strings"
 
 //EndpointDefine ...
+
 type EndpointDefine struct {
-	Measurement bool
-	Handles     []RouteHandle
+	Measurement bool          //should mersuaring the serving of this endpoint
+	Handles     []RouteHandle //the handlers will handle the demain
+	ApiFormer   IRequest
 }
 
 func GetBlueprint(endpointDefine string) string {
